@@ -11,3 +11,4 @@ United (States|Kingdom) matches both “United States” and “United Kingdom�
 
 
 
+SUM(CASE WHEN REGEXP_MATCH(creative, '.*brandedshop.*') AND NOT REGEXP_MATCH(creative, '.*logo.*') THEN 0 ELSE impressions END)
