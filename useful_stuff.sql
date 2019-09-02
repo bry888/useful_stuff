@@ -1,3 +1,7 @@
+> datalab create bry
+# [20] europe-west3-b
+
+
 # kupowali w kategorii
 
 SELECT count(distinct tra.buyer_id) FROM
@@ -42,6 +46,7 @@ and event.category = 'video'
 and JSON_EXTRACT(custom_params.values_raw, '$._opbox.boxName') = 'trailer-smoka'
 limit 6
 ;
+
 
 
 
@@ -114,7 +119,7 @@ GROUP by _PARTITIONDATE
 order by 1
 
 
-# czad! select * from `schema.base.events_*` where _TABLE_SUFFIX IN ("MOBILE_EVENT", "PAGE_VIEW")
+# czad! select * from `schema.base.events_*` where _TABLE_SUFFIX IN ("MOBILE_EVENT", "PAGE_VIEW") <- wildcard (*) to specify more tables-pseudo partitions
 SELECT
       substr(cast(aa._PARTITIONTIME as string),1,10) as v_date
      ,substr(cast(aa._PARTITIONTIME as string),1,7) as v_date_month
@@ -135,6 +140,8 @@ group by
 
 
 
+
+# Partitioning
 
 CREATE TABLE `schema.base.bg_reckitt_utm_data` 
 (utm_source string,
@@ -158,6 +165,17 @@ ALTER TABLE `schema.base.bg_reckitt_utm_data`
    labels=[("pers__id", "0"), ("trunc_dataset", "1")]
  )
 
+
+
+
+create table `base.schema.partitioned_table`
+partition by date(date_time)
+as
+select date_time,
+      columns,
+      columns2
+from `base.schema.source_table`
+where date_time >= '2019-01-01'
 
 
 
@@ -216,6 +234,18 @@ and jSON_EXTRACT_scalar(cp.value[offset(0)],'$.boxName') = 'delivery.expenses'
 limit 1000
 
 
+# extrakty jsona
+JSON_EXTRACT(custom_params.values_raw, '$._opbox'), JSON_EXTRACT_SCALAR(custom_params.values_raw, '$._opbox[boxName]')
+# extrakty structa
+select page_view_id, event_param_value as itemida
+from `base.schema.meta_event_EVENT`,UNNEST(custom_params.values_extracted) event_param,
+unnest (event_param.key) event_param_key ,unnest (event_param.value) event_param_value 
+
+where _PARTITIONDATE between '2018-11-01' and '2018-11-01' 
+and event.category = 'offer.tiles'
+and event_param_key = 'itemId';
+
+
 
 
 
@@ -236,3 +266,18 @@ and
 _PARTITIONDATE between DATE_SUB(CURRENT_DATE(), INTERVAL 3 DAY) and DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)) ord
 
 ON cat.data = ord._PARTITIONDATE and cat.category_id = ord.ord_cat
+;
+
+
+
+
+#### deale
+SELECT
+  Date(_partitiontime) v_date,
+  categories_path[SAFE_OFFSET(0)].name ca_name_0,
+  categories_path[SAFE_OFFSET(1)].name ca_name_1,
+  categories_path[SAFE_OFFSET(2)].name ca_name_2,
+  categories_path[SAFE_OFFSET(3)].name ca_name_3,
+  categories_path[SAFE_OFFSET(4)].name ca_name_4,
+  if(strpos(ARRAY_TO_STRING(flags,","),"FREE_SHIPPING")>0,1,0) as free,
+  if(strpos(ARRAY_TO_STRING(flags,","),"BARGAIN")>0,1,0) as bargain
