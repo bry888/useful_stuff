@@ -277,7 +277,41 @@ SELECT
   categories_path[SAFE_OFFSET(0)].name ca_name_0,
   categories_path[SAFE_OFFSET(1)].name ca_name_1,
   categories_path[SAFE_OFFSET(2)].name ca_name_2,
-  categories_path[SAFE_OFFSET(3)].name ca_name_3,
-  categories_path[SAFE_OFFSET(4)].name ca_name_4,
   if(strpos(ARRAY_TO_STRING(flags,","),"FREE_SHIPPING")>0,1,0) as free,
   if(strpos(ARRAY_TO_STRING(flags,","),"BARGAIN")>0,1,0) as bargain
+
+
+
+
+
+### & is delimiter. Returns single string "apple & pear & banana & pear"
+SELECT STRING_AGG(fruit, " & ") AS string_agg
+FROM UNNEST(["apple", "pear", "banana", "pear"]) AS fruit;
+
+
+### rows with values to array of values. Returns array
+SELECT ARRAY_AGG(x) AS array_agg
+FROM UNNEST([2, 1, -2, 3, -2, 1, 2]) AS x;
+
+# z powrotem
+select array_agg(x), frut from
+(SELECT *, 'ananas' as frut from UNNEST([2, 1, -2, 3, -2, 1, 2]) AS x)
+group by frut
+
+
+
+
+
+#### create structed data
+CREATE TABLE `my-codelab-project-260918.lab.test` (
+  id STRUCT<level1 STRUCT<level2 STRUCT<level3 INT64>>>,
+  t_ TIMESTAMP
+)
+PARTITION BY DATE(t_) 
+
+
+INSERT INTO `my-codelab-project-260918.lab.test` (id, t_) 
+  VALUES(
+    STRUCT(STRUCT(STRUCT(777))),
+    CURRENT_TIMESTAMP()
+  )
