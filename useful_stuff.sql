@@ -315,3 +315,35 @@ INSERT INTO `my-codelab-project-260918.lab.test` (id, t_)
     STRUCT(STRUCT(STRUCT(777))),
     CURRENT_TIMESTAMP()
   )
+
+
+
+
+# filtrowane structa po wielu wartościach > STRUCT:event_params
+SELECT event_date, event_params, event_name, user_pseudo_id
+FROM `base.schema.table`
+where (
+  SELECT COUNT(1)
+  FROM UNNEST(event_params) as params
+  WHERE (params.key, params.value.string_value) IN (
+                  ('marka', 'RENAULT Kangoo'), 
+                  ('marka', 'VOLKSWAGEN'),
+                  ('marka', 'NISSAN eNV200'),
+                  ('marka', 'MAN eTGE'))
+  ) >= 1
+  
+  
+
+# inne filtrowanie
+SELECT MAX(if(param.key = "value", param.value.int_value, NULL)) AS score,
+  MAX(if(param.key = "board", param.value.string_value, NULL)) AS board_type
+FROM (
+  SELECT user_pseudo_id, event_timestamp, param
+  FROM `firebase-public-project.analytics_153293282.events_20180915`,
+  UNNEST(event_params) AS param
+  WHERE event_name = "level_complete_quickplay"
+  AND (param.key = "value" OR param.key = "board")
+)
+GROUP BY user_pseudo_id, event_timestamp
+
+https://stackoverflow.com/questions/43004592/check-if-a-record-field-contains-a-value-using-standard-sql-google-bigquery
